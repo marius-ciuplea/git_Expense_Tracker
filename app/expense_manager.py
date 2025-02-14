@@ -45,6 +45,44 @@ class ExpenseManager:
 		finally:
 			cursor.close()  # Ensure the cursor is closed after the operation
 
+	def update_expense(self, expense_id, amount=None, category=None, description=None):
+		"""Update an existing expense entry in the database"""
+
+		# Ensure at least one field is being updated
+		if amount is None and category is None and description is None:
+			print("⚠️ No updates provided.")
+			return False
+
+		# Build the query dynamically
+		updates = []
+		values = []
+
+		if amount is not None:
+			updates.append("amount = ?")
+			values.append(amount)
+		if category is not None:
+			updates.append("category = ?")
+			values.append(category)
+		if description is not None:
+			updates.append("description = ?")
+			values.append(description)
+
+		values.append(expense_id)  # ID goes at the end
+
+		query = f"UPDATE expenses SET {', '.join(updates)} WHERE id = ?"
+
+		cursor = self.database.cursor()
+		try:
+			cursor.execute(query, tuple(values))
+			self.database.commit()
+			print(f"✅ Expense with ID {expense_id} updated successfully.")
+			return cursor.rowcount > 0
+		except Exception as e:
+			print(f"⚠️ Error updating expense: {e}")
+			return False
+		finally:
+			cursor.close()
+
 	def delete_expenses(self, expense_ids):
 		if not expense_ids:
 			print("⚠️ No expense IDs provided for deletion.")
